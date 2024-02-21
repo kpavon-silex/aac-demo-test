@@ -12,9 +12,10 @@
       ansible.builtin.tempfile:
         state: directory
       register: __temp_dir
-      # notify: Delete temp directory
+      notify: Delete temp directory
 
-    - debug:
+    - name: Log the temp dir path
+      ansible.builtin.debug:
         var: __temp_dir['path']
 
     - name: Download awscli
@@ -28,6 +29,14 @@
       ansible.builtin.unarchive:
         src: "{{ __download_result['dest'] }}"
         dest: "{{ __temp_dir['path'] }}"
+
+    - name: Install awscli
+      ansible.builtin.shell: "{{ __temp_dir['path'] }}/aws/install"
+      register: __shell_result
+
+    - name: Log installation attempt
+      ansible.builtin.debug:
+        var: __shell_result
 
   handlers:
     - name: Delete temp directory
