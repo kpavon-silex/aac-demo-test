@@ -1,0 +1,36 @@
+---
+- name: Configure host for AAC installation
+  hosts: localhost
+  gather_facts: false
+  vars:
+    awscli_source: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+  tasks:
+    - name: Check for existence of awscli
+      ansible.builtin.meta: noop
+
+    - name: Create temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+      register: __temp_dir
+      # notify: Delete temp directory
+
+    - debug:
+        var: __temp_dir['path']
+
+    - name: Download awscli
+      ansible.builtin.get_url:
+        url: "{{ awscli_source }}"
+        dest: "{{ __temp_dir['path'] }}"
+        mode: '0644'
+      register: __download_result
+
+    - name: Unzip awscli
+      ansible.builtin.unarchive:
+        src: "{{ __download_result['dest'] }}"
+        dest: "{{ __temp_dir['path'] }}"
+
+  handlers:
+    - name: Delete temp directory
+      ansible.builtin.file:
+        path: "{{ __temp_dir['path'] }}"
+        state: absent
